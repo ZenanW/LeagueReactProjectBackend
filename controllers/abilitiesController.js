@@ -37,41 +37,81 @@ export const saveAbilities = async (req, res) => {
     }
 };
 
-// Controller to get most chosen abilities stats
 export const getAbilityStats = async (req, res) => {
     try {
-        console.log("Fetching ability stats from database...");
+        console.log("Fetching most chosen abilities for each slot...");
 
         const query = `
-            SELECT 
-                Q_ability AS Q_ability,
-                Q_champion AS Q_champion,
-                W_ability AS W_ability,
-                W_champion AS W_champion,
-                E_ability AS E_ability,
-                E_champion AS E_champion,
-                R_ability AS R_ability,
-                R_champion AS R_champion,
-                COUNT(*) AS frequency
-            FROM ability_selections
-            GROUP BY Q_ability, Q_champion, W_ability, W_champion, 
-                    E_ability, E_champion, R_ability, R_champion
-            ORDER BY frequency DESC
-            LIMIT 10;
+            WITH MostCommonAbilities AS (
+                SELECT * FROM (
+                    SELECT 
+                        'Q' AS slot, 
+                        Q_ability AS ability, 
+                        Q_champion AS champion, 
+                        COUNT(*) AS frequency
+                    FROM ability_selections
+                    WHERE Q_ability IS NOT NULL
+                    GROUP BY Q_ability, Q_champion
+                    ORDER BY frequency DESC
+                    LIMIT 1
+                ) AS Q_abilities
+
+                UNION ALL
+
+                SELECT * FROM (
+                    SELECT 
+                        'W' AS slot, 
+                        W_ability AS ability, 
+                        W_champion AS champion, 
+                        COUNT(*) AS frequency
+                    FROM ability_selections
+                    WHERE W_ability IS NOT NULL
+                    GROUP BY W_ability, W_champion
+                    ORDER BY frequency DESC
+                    LIMIT 1
+                ) AS W_abilities
+
+                UNION ALL
+
+                SELECT * FROM (
+                    SELECT 
+                        'E' AS slot, 
+                        E_ability AS ability, 
+                        E_champion AS champion, 
+                        COUNT(*) AS frequency
+                    FROM ability_selections
+                    WHERE E_ability IS NOT NULL
+                    GROUP BY E_ability, E_champion
+                    ORDER BY frequency DESC
+                    LIMIT 1
+                ) AS E_abilities
+
+                UNION ALL
+
+                SELECT * FROM (
+                    SELECT 
+                        'R' AS slot, 
+                        R_ability AS ability, 
+                        R_champion AS champion, 
+                        COUNT(*) AS frequency
+                    FROM ability_selections
+                    WHERE R_ability IS NOT NULL
+                    GROUP BY R_ability, R_champion
+                    ORDER BY frequency DESC
+                    LIMIT 1
+                ) AS R_abilities
+            )
+            SELECT * FROM MostCommonAbilities;
         `;
 
+        console.log("Executing Query:", query);
         const result = await pool.query(query);
-        
-        console.log("Database Query Result:", result.rows); // Debug log
+        console.log("Database Query Result:", result.rows);
 
-        if (result.rows.length === 0) {
-            console.warn("No ability stats found in the database!");
-        }
-
-        res.json({ mostChosenCombinations: result.rows });
+        res.json({ mostChosenAbilities: result.rows });
     } catch (error) {
-        console.error("Error fetching stats:", error);
-        res.status(500).json({ error: "Database error" });
+        console.error("❌ Database Error:", error.message);
+        res.status(500).json({ error: "Database error", details: error.message });
     }
 };
 
