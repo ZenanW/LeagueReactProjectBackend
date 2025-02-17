@@ -39,76 +39,61 @@ export const saveAbilities = async (req, res) => {
 
 export const getAbilityStats = async (req, res) => {
     try {
-        console.log("Fetching most chosen abilities for each slot...");
+        console.log("Fetching ability frequency data for heatmap...");
 
         const query = `
-            WITH MostCommonAbilities AS (
-                SELECT * FROM (
-                    SELECT 
-                        'Q' AS slot, 
-                        Q_ability AS ability, 
-                        Q_champion AS champion, 
-                        COUNT(*) AS frequency
-                    FROM ability_selections
-                    WHERE Q_ability IS NOT NULL
-                    GROUP BY Q_ability, Q_champion
-                    ORDER BY frequency DESC
-                    LIMIT 1
-                ) AS Q_abilities
+            WITH AbilityCounts AS (
+                SELECT 
+                    'Q' AS slot, 
+                    Q_ability AS ability, 
+                    Q_champion AS champion, 
+                    COUNT(*) AS frequency
+                FROM ability_selections
+                WHERE Q_ability IS NOT NULL
+                GROUP BY Q_ability, Q_champion
 
                 UNION ALL
 
-                SELECT * FROM (
-                    SELECT 
-                        'W' AS slot, 
-                        W_ability AS ability, 
-                        W_champion AS champion, 
-                        COUNT(*) AS frequency
-                    FROM ability_selections
-                    WHERE W_ability IS NOT NULL
-                    GROUP BY W_ability, W_champion
-                    ORDER BY frequency DESC
-                    LIMIT 1
-                ) AS W_abilities
+                SELECT 
+                    'W' AS slot, 
+                    W_ability AS ability, 
+                    W_champion AS champion, 
+                    COUNT(*) AS frequency
+                FROM ability_selections
+                WHERE W_ability IS NOT NULL
+                GROUP BY W_ability, W_champion
 
                 UNION ALL
 
-                SELECT * FROM (
-                    SELECT 
-                        'E' AS slot, 
-                        E_ability AS ability, 
-                        E_champion AS champion, 
-                        COUNT(*) AS frequency
-                    FROM ability_selections
-                    WHERE E_ability IS NOT NULL
-                    GROUP BY E_ability, E_champion
-                    ORDER BY frequency DESC
-                    LIMIT 1
-                ) AS E_abilities
+                SELECT 
+                    'E' AS slot, 
+                    E_ability AS ability, 
+                    E_champion AS champion, 
+                    COUNT(*) AS frequency
+                FROM ability_selections
+                WHERE E_ability IS NOT NULL
+                GROUP BY E_ability, E_champion
 
                 UNION ALL
 
-                SELECT * FROM (
-                    SELECT 
-                        'R' AS slot, 
-                        R_ability AS ability, 
-                        R_champion AS champion, 
-                        COUNT(*) AS frequency
-                    FROM ability_selections
-                    WHERE R_ability IS NOT NULL
-                    GROUP BY R_ability, R_champion
-                    ORDER BY frequency DESC
-                    LIMIT 1
-                ) AS R_abilities
+                SELECT 
+                    'R' AS slot, 
+                    R_ability AS ability, 
+                    R_champion AS champion, 
+                    COUNT(*) AS frequency
+                FROM ability_selections
+                WHERE R_ability IS NOT NULL
+                GROUP BY R_ability, R_champion
             )
-            SELECT * FROM MostCommonAbilities;
+            SELECT * FROM AbilityCounts
+            ORDER BY champion, slot, frequency DESC;
         `;
 
         console.log("Executing Query:", query);
         const result = await pool.query(query);
         console.log("Database Query Result:", result.rows);
 
-        res.json({ mostChosenAbilities: result.rows });
+        res.json({ abilityHeatmap: result.rows });
     } catch (error) {
         console.error("❌ Database Error:", error.message);
         res.status(500).json({ error: "Database error", details: error.message });
