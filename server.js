@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import abilitiesRoutes from './routes/abilitiesRoutes.js';
 import dailyChampionsRoutes from './routes/dailyChampionsRoutes.js';
+import aiGuessRoutes from "./routes/aiGuessRoutes.js";
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 // Sample route to test DB connection
 app.use('/api', abilitiesRoutes); // Base API path
 app.use('/api', dailyChampionsRoutes); // Add new route
+app.use("/api", aiGuessRoutes); // AI guessing
 
 // Debugging log
 console.log("Daily Champions Route Registered");

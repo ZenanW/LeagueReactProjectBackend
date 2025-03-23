@@ -1,5 +1,4 @@
 import express from 'express';
-
 import { saveAbilities, getAbilityStats } from '../controllers/abilitiesController.js';
 
 const router = express.Router();
