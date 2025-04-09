@@ -9,13 +9,19 @@ const handleAskQuestion = async (req, res) => {
 
     try {
       // Build the prompt (you can make this smarter by including previous context)
-      const prompt = previousContext
-        ? `Previous conversation: ${previousContext}\nPlayer asks: ${question}\nWhat champion is being described?`
-        : `The player asks: ${question}\nGuess which League of Legends champion they are describing. Respond with your guess and one follow-up question.`;
-  
-      const aiReply = await callChatGPT(prompt);
-  
-      res.status(200).json({ aiReply });
+      const chatHistory = previousContext
+      ? previousContext.split("\n").map((line) => {
+          const [sender, ...messageParts] = line.split(":");
+          return {
+            sender: sender.trim(),
+            message: messageParts.join(":").trim()
+          };
+        })
+      : [];
+
+      const prompt = question;
+      const result = await callChatGPT(prompt, chatHistory);
+      res.status(200).json(result); 
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Something went wrong when querying the AI." });
