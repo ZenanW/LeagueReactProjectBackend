@@ -1,6 +1,4 @@
 import axios from "axios";
-import dotenv from "dotenv";
-dotenv.config();
 
 const firstMessages = [
   "Yo summoner! I'm ready to guess your main. First up — is your champ melee or ranged?",
